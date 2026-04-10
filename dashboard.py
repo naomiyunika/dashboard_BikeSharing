@@ -168,8 +168,10 @@ st.pyplot(fig)
 st.subheader("Insight")
 
 st.write("""
-- Penyewaan sepeda dipengaruhi oleh musim tertentu.
-- Terdapat jam sibuk (peak hour) pada waktu tertentu.
+- Penyewaan sepeda dipengaruhi oleh musim tertentu. Penyewaan tertinggi terjadi pada musim ke 3 dan terendah pada musim ke 1.
+- Terdapat jam sibuk (peak hour) pada waktu tertentu. Pagi (sekitar jam 07.00-09.00) dan Sore (sekitar jam 16.00-18.00). 
+- Ini menunjukkan bahwa sepeda banyak digunakan untuk aktivitas berangkat dan pulang kerja/sekolah.
+- Puncak tertinggi ada di sore hari (sekitar jam 17.00) yang menandakan bahwa mobilitas pulang kerja lebih tinggi dibanding berangkat.
 - Cuaca memiliki pengaruh terhadap jumlah penyewaan.
 - Clustering menunjukkan adanya tingkat permintaan: rendah, sedang, dan tinggi.
 - Waktu siang dan malam cenderung memiliki aktivitas penyewaan lebih tinggi.
