@@ -11,8 +11,7 @@ sns.set(style='dark')
 def create_daily_rent_df(df):
     daily_df = df.resample(rule='D', on='dteday').agg({
         "cnt_day": "sum"
-    })
-    daily_df = daily_df.reset_index()
+    }).reset_index()
     daily_df.rename(columns={"cnt_day": "total_rent"}, inplace=True)
     return daily_df
 
@@ -21,35 +20,6 @@ def create_season_df(df):
 
 def create_hourly_df(df):
     return df.groupby("hr")["cnt_hour"].sum().reset_index()
-
-def create_weather_df(df):
-    return df.groupby("weathersit_day")["cnt_day"].mean().reset_index()
-
-def create_demand_cluster(df):
-    day_df = df.groupby("dteday")["cnt_day"].sum().reset_index()
-
-    day_df["demand_level"] = pd.cut(
-        day_df["cnt_day"],
-        bins=[0, 2000, 5000, 9000],
-        labels=["Low", "Medium", "High"]
-    )
-    return day_df
-
-def create_time_category(df):
-    hour_df = df.groupby("hr")["cnt_hour"].sum().reset_index()
-
-    def time_category(x):
-        if x < 6:
-            return "Dini Hari"
-        elif x < 12:
-            return "Pagi"
-        elif x < 18:
-            return "Siang"
-        else:
-            return "Malam"
-
-    hour_df["time_category"] = hour_df["hr"].apply(time_category)
-    return hour_df
 
 # Load cleaned data
 all_df = pd.read_csv("main_data.csv")
@@ -76,17 +46,16 @@ with st.sidebar:
         value=[min_date, max_date]
     )
 
-main_df = all_df[(all_df["dteday"] >= str(start_date)) & 
-                 (all_df["dteday"] <= str(end_date))]
+main_df = all_df[
+    (all_df["dteday"] >= str(start_date)) & 
+    (all_df["dteday"] <= str(end_date))
+]
 
 # PREPARE DATA
 
 daily_df = create_daily_rent_df(main_df)
 season_df = create_season_df(main_df)
 hour_df = create_hourly_df(main_df)
-weather_df = create_weather_df(main_df)
-cluster_df = create_demand_cluster(main_df)
-time_df = create_time_category(main_df)
 
 # DASHBOARD
 
@@ -96,70 +65,47 @@ st.subheader("Daily Rental Trend")
 col1, col2 = st.columns(2)
 
 with col1:
-    total_rent = daily_df["total_rent"].sum()
-    st.metric("Total Penyewaan", value=total_rent)
+    st.metric("Total Penyewaan", int(daily_df["total_rent"].sum()))
 
 with col2:
-    avg_rent = round(daily_df["total_rent"].mean(), 2)
-    st.metric("Rata-rata Harian", value=avg_rent)
+    st.metric("Rata-rata Harian", round(daily_df["total_rent"].mean(), 2))
 
 # DAILY TREND
 
-fig, ax = plt.subplots(figsize=(16,8))
-ax.plot(
-    daily_df["dteday"],
-    daily_df["total_rent"],
-    marker='o',
-    linewidth=2
-)
+st.subheader("📈 Tren Penyewaan Harian")
 
-ax.set_title("Trend Penyewaan Harian", fontsize=20)
+fig, ax = plt.subplots(figsize=(14,6))
+ax.plot(daily_df["dteday"], daily_df["total_rent"], marker='o')
+ax.set_xlabel("Tanggal")
+ax.set_ylabel("Jumlah Penyewaan")
+
 st.pyplot(fig)
 
 # PERTANYAAN 1: MUSIM
 
-st.subheader("Pengaruh Musim terhadap Penyewaan")
+st.subheader("📊 Rata-rata Penyewaan per Hari Berdasarkan Musim")
 
 fig, ax = plt.subplots(figsize=(10,6))
 sns.barplot(data=season_df, x="season_day", y="cnt_day", ax=ax)
+
+ax.set_xlabel("Musim")
+ax.set_ylabel("Rata-rata Penyewaan Harian")
 
 st.pyplot(fig)
 
 # PERTANYAAN 2: JAM
 
-st.subheader("Pola Penyewaan Berdasarkan Jam")
+st.subheader("⏰ Total Penyewaan Berdasarkan Jam")
+
+peak_hour = hour_df.loc[hour_df["cnt_hour"].idxmax()]
 
 fig, ax = plt.subplots(figsize=(12,6))
 ax.plot(hour_df["hr"], hour_df["cnt_hour"], marker='o')
-
-st.pyplot(fig)
-
-# KATEGORI WAKTU
-
-st.subheader("Pola Berdasarkan Kategori Waktu")
-
-time_summary = time_df.groupby("time_category")["cnt_hour"].sum().reset_index()
-
-fig, ax = plt.subplots(figsize=(10,6))
-sns.barplot(data=time_summary, x="time_category", y="cnt_hour", ax=ax)
-
-st.pyplot(fig)
-
-# CUACA
-
-st.subheader("Pengaruh Cuaca")
-
-fig, ax = plt.subplots(figsize=(10,6))
-sns.barplot(data=weather_df, x="weathersit_day", y="cnt_day", ax=ax)
-
-st.pyplot(fig)
-
-# CLUSTERING
-
-st.subheader("Clustering Demand Level")
-
-fig, ax = plt.subplots(figsize=(10,6))
-sns.countplot(data=cluster_df, x="demand_level", ax=ax)
+ax.scatter(peak_hour["hr"], peak_hour["cnt_hour"])
+ax.set_xlabel("Jam")
+ax.set_ylabel("Total Penyewaan")
+ax.set_xticks(range(0,24))
+ax.grid(True)
 
 st.pyplot(fig)
 
@@ -168,13 +114,15 @@ st.pyplot(fig)
 st.subheader("Insight")
 
 st.write("""
-- Penyewaan sepeda dipengaruhi oleh musim tertentu. Penyewaan tertinggi terjadi pada musim ke 3 dan terendah pada musim ke 1.
-- Terdapat jam sibuk (peak hour) pada waktu tertentu. Pagi (sekitar jam 07.00-09.00) dan Sore (sekitar jam 16.00-18.00). 
-- Ini menunjukkan bahwa sepeda banyak digunakan untuk aktivitas berangkat dan pulang kerja/sekolah.
-- Puncak tertinggi ada di sore hari (sekitar jam 17.00) yang menandakan bahwa mobilitas pulang kerja lebih tinggi dibanding berangkat.
-- Cuaca memiliki pengaruh terhadap jumlah penyewaan.
-- Clustering menunjukkan adanya tingkat permintaan: rendah, sedang, dan tinggi.
-- Waktu siang dan malam cenderung memiliki aktivitas penyewaan lebih tinggi.
+### Pertanyaan 1: Bagaimana perbedaan rata-rata jumlah penyewaan sepeda per hari pada setiap musim dalam periode tahun 2011-2012?
+- Terdapat perbedaan rata-rata penyewaan sepeda pada setiap musim.
+- Musim ke-3 memiliki rata-rata penyewaan tertinggi (5644.303191), sedangkan musim ke-1 terendah (2604.132597).
+- Hal ini menunjukkan bahwa kondisi musim memengaruhi minat pengguna dalam bersepeda.
+
+### Pertanyaan 2: Pada jam berapa terjadi jumlah penyewaan sepeda tertinggi berdasarkan total penyewaan per jam dalam periode 2011-2012?
+- Penyewaan sepeda tidak merata sepanjang hari.
+- Puncak penyewaan terjadi pada dua periode utama, yaitu pagi hari sekitar pukul 08.00 dengan total sekitar 261.001 penyewaan, dan sore hari sekitar pukul 17.00 dengan total tertinggi mencapai lebih dari 336.860 penyewaan.
+- Aktivitas ini menunjukkan penggunaan sepeda sebagai sarana transportasi kerja/sekolah.
 """)
 
 st.caption("Dashboard by Naomi Yunika Aulia")
