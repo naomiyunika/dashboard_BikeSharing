@@ -78,6 +78,7 @@ fig, ax = plt.subplots(figsize=(14,6))
 ax.plot(daily_df["dteday"], daily_df["total_rent"], marker='o')
 ax.set_xlabel("Tanggal")
 ax.set_ylabel("Jumlah Penyewaan")
+ax.tick_params(axis='x', rotation=45)
 
 st.pyplot(fig)
 
@@ -116,12 +117,13 @@ st.subheader("Insight")
 st.write("""
 ### Pertanyaan 1: Bagaimana perbedaan rata-rata jumlah penyewaan sepeda per hari pada setiap musim dalam periode tahun 2011-2012?
 - Terdapat perbedaan rata-rata penyewaan sepeda pada setiap musim.
-- Musim ke-3 memiliki rata-rata penyewaan tertinggi (5644.303191), sedangkan musim ke-1 terendah (2604.132597).
+- Musim Fall memiliki rata-rata penyewaan tertinggi sekitar 5644 penyewaan per hari, sedangkan musim Spring memiliki rata-rata penyewaan terendah sekitar 2604 penyewaan per hari.
 - Hal ini menunjukkan bahwa kondisi musim memengaruhi minat pengguna dalam bersepeda.
 
 ### Pertanyaan 2: Pada jam berapa terjadi jumlah penyewaan sepeda tertinggi berdasarkan total penyewaan per jam dalam periode 2011-2012?
 - Penyewaan sepeda tidak merata sepanjang hari.
-- Puncak penyewaan terjadi pada dua periode utama, yaitu pagi hari sekitar pukul 08.00 dengan total sekitar 261.001 penyewaan, dan sore hari sekitar pukul 17.00 dengan total tertinggi mencapai lebih dari 336.860 penyewaan.
+- Puncak penyewaan terjadi pada dua periode utama, yaitu pagi hari sekitar pukul 08.00 dan sore hari sekitar pukul 17.00.
+- Puncak penyewaan tertinggi terjadi pada sore hari sekitar pukul 17.00 dengan total mencapai lebih dari 336.860 penyewaan.
 - Aktivitas ini menunjukkan penggunaan sepeda sebagai sarana transportasi kerja/sekolah.
 """)
 
